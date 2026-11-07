@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ダミープロフィール</title>
+<style>
+body{font-family:sans-serif;max-width:480px;margin:auto;padding:12px}
+button,input{font-size:16px;padding:8px;margin:4px 0}
+input{width:100%;box-sizing:border-box}
+.card{border:1px solid #ccc;border-radius:8px;padding:8px;margin:8px 0}
+.site{font-weight:bold}
+</style></head><body>
+<h1>ダミープロフィール</h1>
+<button id="gen">生成</button>
+<div id="out" class="card">（未生成）</div>
+<input id="site" placeholder="使うサイト・アプリ名">
+<button id="save">保存</button>
+<h2>保存済み</h2>
+<input id="q" placeholder="サイト名で検索">
+<div id="list"></div>
+<script>
+const r=n=>{const b=new Uint32Array(1);let x;
+ do{crypto.getRandomValues(b);x=b[0]}while(x>=4294967296-4294967296%n);
+ return x%n};
+const pick=a=>a[r(a.length)];
+const sei=['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤'];
+const mei=['蓮','颯','陽翔','大輝','悠真','結衣','葵','陽菜','美咲','凛'];
+const addr=[['東京都','新宿区'],['大阪府','大阪市北区'],['愛知県','名古屋市中区'],
+ ['北海道','札幌市中央区'],['福岡県','福岡市博多区']];
+const p2=n=>String(n).padStart(2,'0');
+let cur=null;
+let items=JSON.parse(localStorage.getItem('profiles')||'[]');
+
+function gen(){
+ const [p,c]=pick(addr);
+ const y=new Date().getFullYear()-20-r(40);
+ cur={name:pick(sei)+' '+pick(mei),
+  addr:`${p}${c}${1+r(5)}丁目${1+r(20)}-${1+r(20)}`,
+  birth:`${y}/${p2(1+r(12))}/${p2(1+r(28))}`};
+ out.textContent=`${cur.name}\n${cur.addr}\n${cur.birth}`;
+ out.style.whiteSpace='pre-line';
+}
+function render(){
+ list.textContent='';
+ items.forEach((it,i)=>{
+  if(q.value&&!it.site.includes(q.value))return;
+  const d=document.createElement('div');d.className='card';
+  const s=document.createElement('div');s.className='site';
+  s.textContent=`${it.site}（${it.at}）`;
+  const b=document.createElement('div');b.style.whiteSpace='pre-line';
+  b.textContent=`${it.name}\n${it.addr}\n${it.birth}`;
+  const x=document.createElement('button');x.textContent='削除';
+  x.onclick=()=>{items.splice(i,1);store();render()};
+  d.append(s,b,x);list.append(d);
+ });
+}
+function store(){localStorage.setItem('profiles',JSON.stringify(items))}
+gen_=document.getElementById('gen');
+document.getElementById('gen').onclick=gen;
+document.getElementById('save').onclick=()=>{
+ if(!cur||!site.value.trim())return alert('生成とサイト名が必要です');
+ items.unshift({...cur,site:site.value.trim(),
+  at:new Date().toLocaleDateString('ja-JP')});
+ store();site.value='';render();
+};
+q.oninput=render;
+render();
+</script></body></html>
